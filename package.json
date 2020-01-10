@@ -22,7 +22,7 @@
     "demo": "node examples/zeige_kontoumsaetze.js log | bunyan -l trace",
     "demo_dbg": "node-debug examples/zeige_kontoumsaetze.js  | bunyan -l trace",
     "test_dbg": "node-debug _mocha -g 'test_real Test 1'",
-	"test_rundbg" : "node-debug _mocha"
+    "test_rundbg": "node-debug _mocha"
   },
   "repository": {
     "type": "git",

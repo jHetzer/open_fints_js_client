@@ -59,7 +59,7 @@ module.exports = function () {
   me.handleIncomeMessage = function (txt) {
     var s = new Buffer(txt, 'base64').toString('utf8')
     if (me.my_debug_log) {
-      console.log('Incoming: \t' + s)
+      //console.log('Incoming: \t' + s)
     }
     // Debug save incoming
     fs.appendFileSync('log_send_msg.txt', 'Neue Msg Nr: ' + me.dbg_log_nr + '\n\r' + s + '\n\r\n\r')
@@ -68,6 +68,8 @@ module.exports = function () {
     var recvMsg = new Nachricht(me.proto_version)
     try {
       recvMsg.parse(s)
+			//fs.appendFileSync('message.txt', JSON.stringify(recvMsg, null, 4));
+			//console.log(JSON.stringify(recvMsg, null, 4));
       var sendtxt = null
       var sendMsg = null
       // 1. Schauen ob schon exitierender Dialog
@@ -85,6 +87,8 @@ module.exports = function () {
       } else {
         // Normale nachricht
         sendMsg = me.createSendMsg(recvMsg, dialog_obj)
+				// console.log(JSON.stringify(recvMsg, null, 4));
+				// console.log(JSON.stringify(dialog_obj, null, 4));
         // Signatur prüfen
         if (!me.checkSignature(recvMsg, dialog_obj)) {
           sendMsg.addSeg(Helper.newSegFromArray('HIRMG', 2, [
@@ -497,6 +501,9 @@ module.exports = function () {
   }
 
   me.handleHKKAZ = function (segment, ctrl, dialog_obj) {
+		var startdate = segment.store.data.slice(-2)[0].substring(2,);
+		var enddate = segment.store.data.slice(-1)[0].substring(2,);
+
     var atOnceMode = function () {
       var bez = segment.nr
       ctrl.gmsg['0010'] = ['0010', '', 'Nachricht entgegengenommen.']
@@ -505,32 +512,42 @@ module.exports = function () {
       ]))
       var mt_490 = ''
       mt_490 += '\r\n-\r\n'
-      mt_490 += ':20:STARTUMS\r\n'
-      mt_490 += ':25:12345678/0000000001\r\n'
-      mt_490 += ':28C:0\r\n'
-      mt_490 += ':60F:C150101EUR1041,23\r\n'
-      mt_490 += ':61:150101C182,34NMSCNONREF\r\n'
-      mt_490 += ':86:051?00UEBERWEISG?10931?20Ihre Kontonummer 0000001234\r\n'
-      mt_490 += '?21/Test Ueberweisung 1?22n WS EREF: 1100011011 IBAN:\r\n'
-      mt_490 += '?23 DE1100000100000001234 BIC?24: GENODE11 ?1011010100\r\n'
-      mt_490 += '?31?32Bank\r\n'
-      mt_490 += ':62F:C150101EUR1223,57\r\n'
+			mt_490 += ':20:STARTUMS\r\n'
+			mt_490 += ':25:12345678/123456789\r\n'
+			mt_490 += ':28C:0\r\n'
+			mt_490 += ':60F:C'+startdate+'EUR1000,00\r\n'
+			mt_490 += ':61:'+startdate+'D100,00NMSC\r\n'
+			mt_490 += ':86:105\r\n'
+			mt_490 += '?00Lastschrift\r\n'
+			mt_490 += '?10931\r\n'
+			mt_490 += '?20Test Abbuchung\r\n'
+			mt_490 += '?30DEUTDEDB640\r\n'
+			mt_490 += '?31DE76640700240000001234\r\n'
+			mt_490 += '?32Receiver 1\r\n'
+			mt_490 += '?34992\r\n'
+			mt_490 += ':62F:C200107EUR900,00\r\n'
       mt_490 += '-\r\n'
       mt_490 += ':20:STARTUMS\r\n'
-      mt_490 += ':25:12345678/0000000001\r\n'
-      mt_490 += ':28C:0\r\n'
-      mt_490 += ':60F:C150301EUR1223,57\r\n'
-      mt_490 += ':61:150301C100,03NMSCNONREF\r\n'
-      mt_490 += ':86:051?00UEBERWEISG?10931?20Ihre Kontonummer 0000001234\r\n'
-      mt_490 += '?21/Test Ueberweisung 2?22n WS EREF: 1100011011 IBAN:\r\n'
-      mt_490 += '?23 DE1100000100000001234 BIC?24: GENODE11 ?1011010100\r\n'
-      mt_490 += '?31?32Bank\r\n'
-      mt_490 += ':61:150301C100,00NMSCNONREF\r\n'
-      mt_490 += ':86:051?00UEBERWEISG?10931?20Ihre Kontonummer 0000001234\r\n'
-      mt_490 += '?21/Test Ueberweisung 3?22n WS EREF: 1100011011 IBAN:\r\n'
-      mt_490 += '?23 DE1100000100000001234 BIC?24: GENODE11 ?1011010100\r\n'
-      mt_490 += '?31?32Bank\r\n'
-      mt_490 += ':62F:C150101EUR1423,60\r\n'
+			mt_490 += ':25:12345678/123456789\r\n'
+			mt_490 += ':28C:0\r\n'
+			mt_490 += ':60F:C'+enddate+'EUR900,00\r\n'
+			mt_490 += ':61:'+enddate+'C100,00NSTO\r\n'
+			mt_490 += ':86:152\r\n'
+			mt_490 += '?00Dauerauftrag\r\n'
+			mt_490 += '?10931\r\n'
+			mt_490 += '?20Test Umberweisung 1\r\n'
+			mt_490 += '?30PBNKDEFFXXX\r\n'
+			mt_490 += '?31DE90600100700000001234\r\n'
+			mt_490 += '?32Sender 1\r\n'
+			mt_490 += ':61:'+enddate+'C100,00NSTO\r\n'
+			mt_490 += ':86:152\r\n'
+			mt_490 += '?00Dauerauftrag\r\n'
+			mt_490 += '?10931\r\n'
+			mt_490 += '?20Test Umberweisung 2\r\n'
+			mt_490 += '?30UBSWCHZH17A\r\n'
+			mt_490 += '?31CH3200260000000001234\r\n'
+			mt_490 += '?32Sender 2\r\n'
+			mt_490 += ':62F:C'+enddate+'EUR1100,00\r\n'
       mt_490 += '-\r\n'
       ctrl.content.push(Helper.newSegFromArrayWithBez('HIKAZ', 7, bez, [Helper.Byte(mt_490)]))
     }
@@ -544,15 +561,19 @@ module.exports = function () {
       var mt_490 = ''
       mt_490 += '\r\n-\r\n'
       mt_490 += ':20:STARTUMS\r\n'
-      mt_490 += ':25:12345678/0000000001\r\n'
-      mt_490 += ':28C:0\r\n'
-      mt_490 += ':60F:C150101EUR1041,23\r\n'
-      mt_490 += ':61:150101C182,34NMSCNONREF\r\n'
-      mt_490 += ':86:051?00UEBERWEISG?10931?20Ihre Kontonummer 0000001234\r\n'
-      mt_490 += '?21/Test Ueberweisung 1?22n WS EREF: 1100011011 IBAN:\r\n'
-      mt_490 += '?23 DE1100000100000001234 BIC?24: GENODE11 ?1011010100\r\n'
-      mt_490 += '?31?32Bank\r\n'
-      mt_490 += ':62F:C150101EUR1223,57\r\n'
+			mt_490 += ':25:12345678/123456789\r\n'
+			mt_490 += ':28C:0\r\n'
+			mt_490 += ':60F:C'+startdate+'EUR1000,00\r\n'
+			mt_490 += ':61:'+startdate+'D100,00NMSC\r\n'
+			mt_490 += ':86:105\r\n'
+			mt_490 += '?00Lastschrift\r\n'
+			mt_490 += '?10931\r\n'
+			mt_490 += '?20Test Abbuchung\r\n'
+			mt_490 += '?30DEUTDEDB640\r\n'
+			mt_490 += '?31DE76640700240000001234\r\n'
+			mt_490 += '?32Receiver 1\r\n'
+			mt_490 += '?34992\r\n'
+			mt_490 += ':62F:C200107EUR900,00\r\n'
       mt_490 += '-\r\n'
       mt_490 += ':20:STARTUMS\r\n'
       ctrl.content.push(Helper.newSegFromArrayWithBez('HIKAZ', 7, bez, [Helper.Byte(mt_490)]))
@@ -565,20 +586,26 @@ module.exports = function () {
         ['0020', '', '*Umsatzbereitstellung erfolgreich']
       ]))
       var mt_490 = ''
-      mt_490 += ':25:12345678/0000000001\r\n'
-      mt_490 += ':28C:0\r\n'
-      mt_490 += ':60F:C150301EUR1223,57\r\n'
-      mt_490 += ':61:150301C100,03NMSCNONREF\r\n'
-      mt_490 += ':86:051?00UEBERWEISG?10931?20Ihre Kontonummer 0000001234\r\n'
-      mt_490 += '?21/Test Ueberweisung 2?22n WS EREF: 1100011011 IBAN:\r\n'
-      mt_490 += '?23 DE1100000100000001234 BIC?24: GENODE11 ?1011010100\r\n'
-      mt_490 += '?31?32Bank\r\n'
-      mt_490 += ':61:150301C100,00NMSCNONREF\r\n'
-      mt_490 += ':86:051?00UEBERWEISG?10931?20Ihre Kontonummer 0000001234\r\n'
-      mt_490 += '?21/Test Ueberweisung 3?22n WS EREF: 1100011011 IBAN:\r\n'
-      mt_490 += '?23 DE1100000100000001234 BIC?24: GENODE11 ?1011010100\r\n'
-      mt_490 += '?31?32Bank\r\n'
-      mt_490 += ':62F:C150101EUR1423,60\r\n'
+			mt_490 += ':25:12345678/123456789\r\n'
+			mt_490 += ':28C:0\r\n'
+			mt_490 += ':60F:C'+enddate+'EUR900,00\r\n'
+			mt_490 += ':61:'+enddate+'C100,00NSTO\r\n'
+			mt_490 += ':86:152\r\n'
+			mt_490 += '?00Dauerauftrag\r\n'
+			mt_490 += '?10931\r\n'
+			mt_490 += '?20Test Umberweisung 1\r\n'
+			mt_490 += '?30PBNKDEFFXXX\r\n'
+			mt_490 += '?31DE90600100700000001234\r\n'
+			mt_490 += '?32Sender 1\r\n'
+			mt_490 += ':61:'+enddate+'C100,00NSTO\r\n'
+			mt_490 += ':86:152\r\n'
+			mt_490 += '?00Dauerauftrag\r\n'
+			mt_490 += '?10931\r\n'
+			mt_490 += '?20Test Umberweisung 2\r\n'
+			mt_490 += '?30UBSWCHZH17A\r\n'
+			mt_490 += '?31CH3200260000000001234\r\n'
+			mt_490 += '?32Sender 2\r\n'
+			mt_490 += ':62F:C'+enddate+'EUR1100,00\r\n'
       mt_490 += '-\r\n'
       ctrl.content.push(Helper.newSegFromArrayWithBez('HIKAZ', 7, bez, [Helper.Byte(mt_490)]))
     }
